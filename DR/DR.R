@@ -1,13 +1,18 @@
 #DR---Dose response summaries, curves and predictions
 
-#import libraries
 install.packages("dplyr")
+install.packages("writexl")
+
+#import libraries
+
 library(dplyr)
+library(readxl)
+library(writexl)
 
 
 #import raw data (raw_data)
-raw_data <- read.csv("path_to_your_data.csv", stringsAsFactors = FALSE)
-
+raw_data <- read_excel("C:/Users/Nomade/OneDrive/Bureau/JAMA/raw_data.xlsx")
+View(raw_data)
 
 #Rename useful variables (drma)- id, n.e, n.c, duration, int.type, design,  
 ###bp.measure, hta, ckd.yn, dose.e, dose.c, y.e, sd.e, y.c, sd.c 
@@ -33,12 +38,12 @@ drma <- raw_data %>%
          bp.measure = BP_measure_method,
          dose.e = `Follow up_sodium _IG`,
          dose.c = `Follow up_sodium _CG`,
-         y.e = Follow_up_SBP_IG,
+         y.e = 'Follow up_SBP_IG',
          sd.e = `Follow up_SBP_IG (SD)`,
-         y.c = Follow_up_SBP_CG,
+         y.c = 'Follow up_SBP_CG',
          sd.c = `Follow up_SBP_CG (SD)`)
 
-
+glimpse(drma)
 
 #(drma) change mmol/day of sodium to grams with 1 decimal for dose.e and dose.c
 
@@ -46,13 +51,24 @@ drma <- drma %>%
   mutate(dose.e = round(dose.e * 0.023, 1),
          dose.c = round(dose.c * 0.023, 1))
 
+#code in hta---Normotensive/Pre-hypertensive==0, Hypertensive==1, Mixed==2
+drma <- drma %>%
+  mutate(hta = recode(hta,
+                      "Normotensive" = 0,
+                      "Pre-hypertensive" = 0,
+                      "Hypertensive" = 1,
+                      "Mixed" = 2))
 
 
+
+glimpse(drma)
 ###Create two tables for drm(all), drm.e, drm.c 
 ###### (id, n.e, dose.e, y.e, sd.e, hta, ckd.yn).....n.c, etc
 
 drm.e <- drma %>%
   select(id, n.e, dose.e, y.e, sd.e, hta, ckd.yn)
+
+glimpse(drm.e)
 
 drm.c <- drma %>%
   select(id, n.c, dose.c, y.c, sd.c, hta, ckd.yn)
@@ -61,21 +77,23 @@ drm.c <- drma %>%
 
 
 #####join(stack) tables by ID (id, n, dose, y, sd) assign as drm
-drm <- full_join(drm.e, drm.c, by = "id")
 
-####sort drm by id number ascending
+
 drm <- bind_rows(
   drm.e %>% rename(n = n.e, dose = dose.e, y = y.e, sd = sd.e),
   drm.c %>% rename(n = n.c, dose = dose.c, y = y.c, sd = sd.c)
 )
 
 
+####sort drm by id number ascending
 drm <- drm %>% arrange(id)
-
+glimpse(drm)
 
 
 #filter and save dataframes, drm, normo(filter hta), hyper(filter hta), 
 ########ckd (filter ckd.stage)
+
+write.csv(drm, "drm.csv", row.names = FALSE)
 
 
 # Filter for normotensive (HTA == 0)
