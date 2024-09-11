@@ -1,5 +1,102 @@
 #DR---Dose response summaries, curves and predictions
 
+#import libraries
+install.packages("dplyr")
+library(dplyr)
+
+
+#import raw data (raw_data)
+raw_data <- read.csv("path_to_your_data.csv", stringsAsFactors = FALSE)
+
+
+#Rename useful variables (drma)- id, n.e, n.c, duration, int.type, design,  
+###bp.measure, hta, ckd.yn, dose.e, dose.c, y.e, sd.e, y.c, sd.c 
+
+####from - ID, N_experimental, N_control,Study_design, Intervention type,
+###Study_duration (wks), (CKD)_1 or 0, HTA_Status, BP_measure_method,
+
+
+###Follow up_sodium _IG, Follow up_sodium _CG
+###Follow up_SBP_IG, Follow up_SBP_IG (SD), 
+###Follow up_SBP_CG, Follow up_SBP_CG (SD)
+
+
+drma <- raw_data %>%
+  rename(id = ID,
+         n.e = N_experimental,
+         n.c = N_control,
+         design = Study_design,
+         int.type = `Intervention type`,
+         duration = `Study_duration (wks)`,
+         ckd.yn = `(CKD)_1 or 0`,
+         hta = HTA_Status,
+         bp.measure = BP_measure_method,
+         dose.e = `Follow up_sodium _IG`,
+         dose.c = `Follow up_sodium _CG`,
+         y.e = Follow_up_SBP_IG,
+         sd.e = `Follow up_SBP_IG (SD)`,
+         y.c = Follow_up_SBP_CG,
+         sd.c = `Follow up_SBP_CG (SD)`)
+
+
+
+#(drma) change mmol/day of sodium to grams with 1 decimal for dose.e and dose.c
+
+drma <- drma %>%
+  mutate(dose.e = round(dose.e * 0.023, 1),
+         dose.c = round(dose.c * 0.023, 1))
+
+
+
+###Create two tables for drm(all), drm.e, drm.c 
+###### (id, n.e, dose.e, y.e, sd.e, hta, ckd.yn).....n.c, etc
+
+drm.e <- drma %>%
+  select(id, n.e, dose.e, y.e, sd.e, hta, ckd.yn)
+
+drm.c <- drma %>%
+  select(id, n.c, dose.c, y.c, sd.c, hta, ckd.yn)
+
+
+
+
+#####join(stack) tables by ID (id, n, dose, y, sd) assign as drm
+drm <- full_join(drm.e, drm.c, by = "id")
+
+####sort drm by id number ascending
+drm <- bind_rows(
+  drm.e %>% rename(n = n.e, dose = dose.e, y = y.e, sd = sd.e),
+  drm.c %>% rename(n = n.c, dose = dose.c, y = y.c, sd = sd.c)
+)
+
+
+drm <- drm %>% arrange(id)
+
+
+
+#filter and save dataframes, drm, normo(filter hta), hyper(filter hta), 
+########ckd (filter ckd.stage)
+
+
+# Filter for normotensive (HTA == 0)
+normo <- drm %>% filter(hta == 0)
+
+# Filter for hypertensive (HTA == 1)
+hyper <- drm %>% filter(hta == 1)
+
+# Filter for CKD based on the CKD stage column 
+ckd <- drm %>% filter(ckd.yn == 1)
+
+# Optionally save these filtered dataframes to CSV files
+write.csv(normo, "normotensive_data.csv", row.names = FALSE)
+write.csv(hyper, "hypertensive_data.csv", row.names = FALSE)
+write.csv(ckd, "ckd_data.csv", row.names = FALSE)
+
+
+
+
+
+
 ###All population
 
 ###Linear model
@@ -17,7 +114,9 @@ results_table <- summary(lin_drm)
 
 # Save coefficient table
 results_df <- as.data.frame(results_table$coefficients)
-write_xlsx(results_df, path = "C:/Users/Nomade/OneDrive/Bureau/Practice/documentation/summary_table.xlsx")
+write_xlsx(results_df, 
+           path = "C:/Users/Nomade/OneDrive/Bureau/
+           Practice/documentation/summary_table.xlsx")
 
 # Graphical results
 dosex_drm <- data.frame(dose = seq(0, 250, 1))  
@@ -48,7 +147,8 @@ p <- ggplot(plot_data, aes(x = dose)) +
   )
 
 # Save the plot
-ggsave("C:/Users/Nomade/OneDrive/Bureau/Practice/documentation/dose_response_plot.png", p, width = 8, height = 6)
+ggsave("C:/Users/Nomade/OneDrive/Bureau/Practice/
+       documentation/dose_response_plot.png", p, width = 8, height = 6)
 
 # Display the plot
 print(p)
@@ -105,7 +205,8 @@ drmln_pred <- round(pred_md, 2)
 
 # Write the data frame to an Excel file
 write_xlsx(drmln_pred, 
-           path = "C:/Users/Nomade/OneDrive/Bureau/Practice/documentation/drmln_pred.xlsx")
+           path = "C:/Users/Nomade/OneDrive/Bureau/Practice
+           /documentation/drmln_pred.xlsx")
 
 #quadratic predictions
 
@@ -115,7 +216,8 @@ drmqdr_pred <- round(pred_md, 2)
 
 # Write the data frame to an Excel file
 write_xlsx(drmqdr_pred, 
-           path = "C:/Users/Nomade/OneDrive/Bureau/Practice/documentation/drmqdr_pred.xlsx")
+           path = "C:/Users/Nomade/OneDrive/Bureau/Practice
+           /documentation/drmqdr_pred.xlsx")
 
 #spline predictions
 
@@ -125,7 +227,8 @@ drmspl_pred <- round(pred_md, 2)
 
 # Write the data frame to an Excel file
 write_xlsx(drmspl_pred, 
-           path = "C:/Users/Nomade/OneDrive/Bureau/Practice/documentation/drmspl_pred.xlsx")
+           path = "C:/Users/Nomade/OneDrive/Bureau/Practice
+           /documentation/drmspl_pred.xlsx")
 
 
 
@@ -148,7 +251,8 @@ results_table <- summary(lin_normo)
 
 # Save coefficient table
 results_df <- as.data.frame(results_table$coefficients)
-write_xlsx(results_df, path = "C:/Users/Nomade/OneDrive/Bureau/Practice/documentation/summary_table.xlsx")
+write_xlsx(results_df, path = "C:/Users/Nomade/OneDrive/Bureau/Practice
+           /documentation/summary_table.xlsx")
 
 # Graphical results
 dosex_normo <- data.frame(dose = seq(0, 250, 1))  
@@ -175,12 +279,14 @@ p <- ggplot(plot_data, aes(x = dose)) +
   theme(
     plot.title = element_text(hjust = 0.5, face = "bold"),
     plot.subtitle = element_text(hjust = 0.5),
-    axis.text = element_text(size = 16, face = "bold"),  # Bolden the tick labels
+    axis.text = element_text(size = 16, face = "bold"),  
+    # Bolden the tick labels
     axis.title = element_text(size = 18), # Bolden the axis labels
   )
 
 # Save the plot
-ggsave("C:/Users/Nomade/OneDrive/Bureau/Practice/Doc/dose_response_plot2.png", p, width = 8, height = 6)
+ggsave("C:/Users/Nomade/OneDrive/Bureau/Practice
+       /Doc/dose_response_plot2.png", p, width = 8, height = 6)
 
 # Display the plot
 print(p)
@@ -238,7 +344,8 @@ normoln_pred <- round(pred_md, 2)
 
 # Write the data frame to an Excel file
 write_xlsx(normoln_pred, 
-           path = "C:/Users/Nomade/OneDrive/Bureau/Practice/documentation/normoln_pred.xlsx")
+           path = "C:/Users/Nomade/OneDrive/Bureau/Practice
+           /documentation/normoln_pred.xlsx")
 
 #quadratic predictions
 
@@ -248,7 +355,8 @@ normoqdr_pred <- round(pred_md, 2)
 
 # Write the data frame to an Excel file
 write_xlsx(normoqdr_pred, 
-           path = "C:/Users/Nomade/OneDrive/Bureau/Practice/documentation/normoqdr_pred.xlsx")
+           path = "C:/Users/Nomade/OneDrive/Bureau/Practice
+           /documentation/normoqdr_pred.xlsx")
 
 #spline predictions
 
@@ -258,7 +366,8 @@ normospl_pred <- round(pred_md, 2)
 
 # Write the data frame to an Excel file
 write_xlsx(normospl_pred, 
-           path = "C:/Users/Nomade/OneDrive/Bureau/Practice/documentation/normospl_pred.xlsx")
+           path = "C:/Users/Nomade/OneDrive/Bureau/Practice
+           /documentation/normospl_pred.xlsx")
 
 
 
@@ -280,7 +389,8 @@ results_table <- summary(lin_hyper)
 
 # Save coefficient table
 results_df <- as.data.frame(results_table$coefficients)
-write_xlsx(results_df, path = "C:/Users/Nomade/OneDrive/Bureau/Practice/documentation/summary_table.xlsx")
+write_xlsx(results_df, path = "C:/Users/Nomade/OneDrive/Bureau/Practice
+           /documentation/summary_table.xlsx")
 
 # Graphical results
 dosex_hyper <- data.frame(dose = seq(0, 250, 1))  
@@ -307,12 +417,14 @@ p <- ggplot(plot_data, aes(x = dose)) +
   theme(
     plot.title = element_text(hjust = 0.5, face = "bold"),
     plot.subtitle = element_text(hjust = 0.5),
-    axis.text = element_text(size = 16, face = "bold"),  # Bolden the tick labels
+    axis.text = element_text(size = 16, face = "bold"),  
+    # Bolden the tick labels
     axis.title = element_text(size = 18), # Bolden the axis labels
   )
 
 # Save the plot
-ggsave("C:/Users/Nomade/OneDrive/Bureau/Practice/Doc/dose_response_plot3.png", p, width = 8, height = 6)
+ggsave("C:/Users/Nomade/OneDrive/Bureau/Practice/Doc/dose_response_plot3.png",
+       p, width = 8, height = 6)
 
 # Display the plot
 print(p)
@@ -372,7 +484,8 @@ hyperln_pred <- round(pred_md, 2)
 
 # Write the data frame to an Excel file
 write_xlsx(hyperln_pred, 
-           path = "C:/Users/Nomade/OneDrive/Bureau/Practice/documentation/hyperln_pred.xlsx")
+           path = "C:/Users/Nomade/OneDrive/Bureau/Practice/
+           documentation/hyperln_pred.xlsx")
 
 #quadratic predictions
 
@@ -382,7 +495,8 @@ hyperqdr_pred <- round(pred_md, 2)
 
 # Write the data frame to an Excel file
 write_xlsx(hyperqdr_pred, 
-           path = "C:/Users/Nomade/OneDrive/Bureau/Practice/documentation/hyperqdr_pred.xlsx")
+           path = "C:/Users/Nomade/OneDrive/Bureau/Practice/
+           documentation/hyperqdr_pred.xlsx")
 
 #spline predictions
 
@@ -392,7 +506,8 @@ hyperspl_pred <- round(pred_md, 2)
 
 # Write the data frame to an Excel file
 write_xlsx(hyperspl_pred, 
-           path = "C:/Users/Nomade/OneDrive/Bureau/Practice/documentation/hyperspl_pred.xlsx")
+           path = "C:/Users/Nomade/OneDrive/Bureau/Practice/
+           documentation/hyperspl_pred.xlsx")
 
 
 
@@ -417,7 +532,8 @@ results_table <- summary(lin_ckd)
 
 # Save coefficient table
 results_df <- as.data.frame(results_table$coefficients)
-write_xlsx(results_df, path = "C:/Users/Nomade/OneDrive/Bureau/Practice/documentation/summary_table.xlsx")
+write_xlsx(results_df, path = "C:/Users/Nomade/OneDrive/Bureau/Practice
+           /documentation/summary_table.xlsx")
 
 # Graphical results
 dosex_ckd <- data.frame(dose = seq(0, 250, 1))  
@@ -444,12 +560,14 @@ p <- ggplot(plot_data, aes(x = dose)) +
   theme(
     plot.title = element_text(hjust = 0.5, face = "bold"),
     plot.subtitle = element_text(hjust = 0.5),
-    axis.text = element_text(size = 16, face = "bold"),  # Bolden the tick labels
+    axis.text = element_text(size = 16, face = "bold"),  
+    # Bolden the tick labels
     axis.title = element_text(size = 18), # Bolden the axis labels
   )
 
 # Save the plot
-ggsave("C:/Users/Nomade/OneDrive/Bureau/Practice/Doc/dose_response_plot4.png", p, width = 8, height = 6)
+ggsave("C:/Users/Nomade/OneDrive/Bureau/Practice/Doc/dose_response_plot4.png", 
+       p, width = 8, height = 6)
 
 # Display the plot
 print(p)
@@ -505,7 +623,8 @@ ckdln_pred <- round(pred_md, 2)
 
 # Write the data frame to an Excel file
 write_xlsx(ckdln_pred, 
-           path = "C:/Users/Nomade/OneDrive/Bureau/Practice/documentation/ckdln_pred.xlsx")
+           path = "C:/Users/Nomade/OneDrive/Bureau/Practice/
+           documentation/ckdln_pred.xlsx")
 
 #quadratic predictions
 
@@ -515,7 +634,8 @@ ckdqdr_pred <- round(pred_md, 2)
 
 # Write the data frame to an Excel file
 write_xlsx(ckdqdr_pred, 
-           path = "C:/Users/Nomade/OneDrive/Bureau/Practice/documentation/ckdqdr_pred.xlsx")
+           path = "C:/Users/Nomade/OneDrive/Bureau/Practice/
+           documentation/ckdqdr_pred.xlsx")
 
 #spline predictions
 
@@ -525,6 +645,7 @@ ckdspl_pred <- round(pred_md, 2)
 
 # Write the data frame to an Excel file
 write_xlsx(drmspl_pred, 
-           path = "C:/Users/Nomade/OneDrive/Bureau/Practice/documentation/ckdspl_pred.xlsx")
+           path = "C:/Users/Nomade/OneDrive/Bureau/Practice/
+           documentation/ckdspl_pred.xlsx")
 
 
