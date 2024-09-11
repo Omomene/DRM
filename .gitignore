@@ -2,3 +2,6 @@ raw_data.xlsx
 .Rproj.user
 .Rhistory
 
+*.Rproj.user/
+
+
