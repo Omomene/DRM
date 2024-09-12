@@ -88,6 +88,7 @@ meta_results <- metacont(n.e = allbias$n.e,
 
 # Print the meta-analysis results
 print(meta_results)
+metabias(meta_results, method.bias = "Egger")
 
 
 funnelall <- funnel(meta_results, axes = FALSE, col = "steelblue", 
@@ -128,6 +129,7 @@ meta_results <- metacont(n.e = normobias$n.e,
 
 # Print the meta-analysis results
 print(meta_results)
+metabias(meta_results, method.bias = "Egger")
 
 
 funnelall <- funnel(meta_results, axes = FALSE, col = "steelblue", 
@@ -170,6 +172,7 @@ meta_results <- metacont(n.e = hyperbias$n.e,
 
 # Print the meta-analysis results
 print(meta_results)
+metabias(meta_results, method.bias = "Egger")
 
 funnelall <- funnel(meta_results, axes = FALSE, col = "steelblue",
                     lwd.random = NULL, col.random = NULL,
