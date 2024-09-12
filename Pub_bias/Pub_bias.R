@@ -1,146 +1,202 @@
-#Publication bias for a tradtional meta-analysis of the DRMA
+#Publication bias for a traditional meta-analysis of the DRMA
 
-# Load required packages
-library(meta)
-library(ggplot2)
 library(readxl)
+library(writexl)
+library(openxlsx)
+library(dosresmeta)
+library(rms)
+library(tidyverse)
+library(metafor)
+library(meta)
+library(rmeta)
+library(mvmeta)
 
-####All population
+#import raw data (raw_data)
+raw_data <- read_excel("C:/Users/Nomade/OneDrive/Bureau/JAMA/raw_data.xlsx")
+View(raw_data)
 
+#Rename useful variables (drma)- id, n.e, n.c, duration, int.type, design,  
+###bp.measure, hta, ckd.yn, dose.e, dose.c, y.e, sd.e, y.c, sd.c 
+
+####from - ID, N_experimental, N_control,Study_design, Intervention type,
+###Study_duration (wks), (CKD)_1 or 0, HTA_Status, BP_measure_method,
+
+
+###Follow up_sodium _IG, Follow up_sodium _CG
+###Follow up_SBP_IG, Follow up_SBP_IG (SD), 
+###Follow up_SBP_CG, Follow up_SBP_CG (SD)
+
+
+drma <- raw_data %>%
+  rename(id = ID,
+         n.e = N_experimental,
+         n.c = N_control,
+         design = Study_design,
+         int.type = `Intervention type`,
+         duration = `Study_duration (wks)`,
+         ckd.yn = `(CKD)_1 or 0`,
+         hta = HTA_Status,
+         bp.measure = BP_measure_method,
+         dose.e = `Follow up_sodium _IG`,
+         dose.c = `Follow up_sodium _CG`,
+         y.e = 'Follow up_SBP_IG',
+         sd.e = `Follow up_SBP_IG (SD)`,
+         y.c = 'Follow up_SBP_CG',
+         sd.c = `Follow up_SBP_CG (SD)`)
+
+glimpse(drma)
+
+#(drma) change mmol/day of sodium to grams with 1 decimal for dose.e and dose.c
+
+drma <- drma %>%
+  mutate(dose.e = round(dose.e * 0.023, 1),
+         dose.c = round(dose.c * 0.023, 1))
+
+#code in hta---Normotensive/Pre-hypertensive==0, Hypertensive==1, Mixed==2
+allbias <- drma %>%
+  mutate(hta = recode(hta,
+                      "Normotensive" = 0,
+                      "Pre-hypertensive" = 0,
+                      "Hypertensive" = 1,
+                      "Mixed" = 2))
+
+
+
+glimpse(allbias)
+
+#filter allbias, normobias(filter hta), hyperbias(filter hta)
+normobias <- allbias %>% filter(hta == 0)
+
+glimpse (normobias)
+
+hyperbias <- allbias %>% filter(hta == 1)
+
+glimpse (hyperbias)
+
+
+
+###Pub bias for all population
 # Perform meta-analysis using metacont from meta package
-meta_results <- metacont(n.e = pub_bias$n.t, 
-                         mean.e = pub_bias$mean.t, 
-                         sd.e = pub_bias$sd.t,
-                         n.c = pub_bias$n.c, 
-                         mean.c = pub_bias$mean.c, 
-                         sd.c = pub_bias$sd.c,
-                         data = pub_bias,
+meta_results <- metacont(n.e = allbias$n.e, 
+                         mean.e = allbias$y.e, 
+                         sd.e = allbias$sd.e,
+                         n.c = allbias$n.c, 
+                         mean.c = allbias$y.c, 
+                         sd.c = allbias$sd.c,
+                         data = allbias,
                          sm = "SMD")
 
 # Print the meta-analysis results
 print(meta_results)
 
-# Plot the funnel plot with ggplot2
-funnel_plot <- funnel(meta_results, 
-                      col = "steelblue", 
-                      col.random = "blue",axes = FALSE,
-                      bty = "o",
-                      shape = 16, 
-                      border = "black",
-                      xlab = "Standardized Mean Difference (SMD)",
-                      main = "Funnel Plot for Publication Bias",
-                      xlim = c(-1.5, 1),
-                      ylim = c(0.5, 0),
-                      main = "SBP change by Intervention type") +
-  # Add horizontal line at random effects line
-  geom_hline(yintercept = meta_results$randomeffects$mean, 
-             linetype = "solid", color = "blue", size = 1)
-# Add X-axis
-axis(1)
 
-# Add Y-axis
-axis(2)
+funnelall <- funnel(meta_results, axes = FALSE, col = "steelblue", 
+                    lwd.common = 1.35, lty.common = 1, col.common = "gray",
+                    xlab = "",  
+                    ylab = "",
+                    xlim = c(-1.5, 1),
+                    ylim = c(0.6, 0))
 
-# Save the plot as PNG
-ggsave("funnel_plot.png", funnel_plot, width = 10, height = 8)
+# Add only left and bottom axes manually
 
-# Display the plot
-print(funnel_plot)
+axis(1, cex.axis = 0.8, tck = -0.05)  # Add x-axis (bottom)
+axis(2, cex.axis = 0.8, tck = -0.05)  # Add y-axis (left)
 
-?funnel
+# Manually draw a box with only the left and bottom lines
+box(lty = "solid", col = "black", bty = "l", lwd = 1.2)  # Add the "l" shaped box
+
+# Add grid lines using abline
+abline(h = seq(0, 0.6, by = 0.1), col = "gray", lty = 2, lwd = 1)  # Horizontal grid lines
+
+# Add minimalist labels with adjusted font size
+mtext("Standardized Mean Difference (SMD)", side = 1, line = 2, cex = 0.9)
+mtext("Standard Error", side = 2, line = 2, cex = 0.9)
 
 
 
-#Hyper
 
-
+###Pub bias for normotensive population
 # Perform meta-analysis using metacont from meta package
-meta_results <- metacont(n.e = pub_bias_hyper$n.t, 
-                         mean.e = pub_bias_hyper$mean.t, 
-                         sd.e = pub_bias_hyper$sd.t,
-                         n.c = pub_bias_hyper$n.c, 
-                         mean.c = pub_bias_hyper$mean.c, 
-                         sd.c = pub_bias_hyper$sd.c,
-                         data = pub_bias_hyper,
+meta_results <- metacont(n.e = normobias$n.e, 
+                         mean.e = normobias$y.e, 
+                         sd.e = normobias$sd.e,
+                         n.c = normobias$n.c, 
+                         mean.c = normobias$y.c, 
+                         sd.c = normobias$sd.c,
+                         data = normobias,
                          sm = "SMD")
 
 # Print the meta-analysis results
 print(meta_results)
 
-# Plot the funnel plot with ggplot2
-funnel_plot <- funnel(meta_results, 
-                      col = "steelblue", 
-                      col.random = "blue",axes = FALSE,
-                      bty = "o",
-                      shape = 16, 
-                      border = "black",
-                      xlab = "Standardized Mean Difference (SMD)",
-                      main = "Funnel Plot for Publication Bias",
-                      xlim = c(-1.5, 1),
-                      ylim = c(0.5, 0),
-                      main = "SBP change by Intervention type") +
-  # Add horizontal line at random effects line
-  geom_hline(yintercept = meta_results$randomeffects$mean, 
-             linetype = "solid", color = "blue", size = 1)
-# Add X-axis
-axis(1)
 
-# Add Y-axis
-axis(2)
+funnelall <- funnel(meta_results, axes = FALSE, col = "steelblue", 
+                    lwd.common = 1.35, lty.common = 1, col.common = "gray",
+                    xlab = "",  
+                    ylab = "",
+                    xlim = c(-1.5, 1),
+                    ylim = c(0.6, 0))
 
-# Save the plot as PNG
-ggsave("C:/Users/Nomade/OneDrive/Bureau/Practice/doc/funnel_plot2.png", funnel_plot, width = 10, height = 8)
+# Add only left and bottom axes manually
 
-# Display the plot
-print(funnel_plot)
+axis(1, cex.axis = 0.8, tck = -0.05)  # Add x-axis (bottom)
+axis(2, cex.axis = 0.8, tck = -0.05)  # Add y-axis (left)
 
-?funnel
+# Manually draw a box with only the left and bottom lines
+box(lty = "solid", col = "black", bty = "l", lwd = 1.2)  # Add the "l" shaped box
+
+# Add grid lines using abline
+abline(h = seq(0, 0.6, by = 0.1), col = "gray", lty = 2, lwd = 1)  # Horizontal grid lines
+
+# Add minimalist labels with adjusted font size
+mtext("Standardized Mean Difference (SMD)", side = 1, line = 2, cex = 0.9)
+mtext("Standard Error", side = 2, line = 2, cex = 0.9)
 
 
 
 
-#Normo
 
 
+###Pub bias for hypertensive population
 # Perform meta-analysis using metacont from meta package
-meta_results <- metacont(n.e = pub_bias_normo$n.t, 
-                         mean.e = pub_bias_normo$mean.t, 
-                         sd.e = pub_bias_normo$sd.t,
-                         n.c = pub_bias_normo$n.c, 
-                         mean.c = pub_bias_normo$mean.c, 
-                         sd.c = pub_bias_normo$sd.c,
-                         data = pub_bias_normo,
+meta_results <- metacont(n.e = hyperbias$n.e, 
+                         mean.e = hyperbias$y.e, 
+                         sd.e = hyperbias$sd.e,
+                         n.c = hyperbias$n.c, 
+                         mean.c = hyperbias$y.c, 
+                         sd.c = hyperbias$sd.c,
+                         data = hyperbias,
                          sm = "SMD")
 
 # Print the meta-analysis results
 print(meta_results)
 
-# Plot the funnel plot with ggplot2
-funnel_plot <- funnel(meta_results, 
-                      col = "steelblue", 
-                      col.random = "blue",axes = FALSE,
-                      bty = "o",
-                      shape = 16, 
-                      border = "black",
-                      xlab = "Standardized Mean Difference (SMD)",
-                      main = "Funnel Plot for Publication Bias",
-                      xlim = c(-1.5, 1),
-                      ylim = c(0.5, 0),
-                      main = "SBP change by Intervention type") +
-  # Add horizontal line at random effects line
-  geom_hline(yintercept = meta_results$randomeffects$mean, 
-             linetype = "solid", color = "blue", size = 1)
-# Add X-axis
-axis(1)
+funnelall <- funnel(meta_results, axes = FALSE, col = "steelblue",
+                    lwd.random = NULL, col.random = NULL,
+                    lwd.common = 1.35, lty.common = 1, col.common = "gray",
+                    xlab = "",  
+                    ylab = "",
+                    xlim = c(-1.5, 1),
+                    ylim = c(0.6, 0))
 
-# Add Y-axis
-axis(2)
+# Add only left and bottom axes manually
 
-# Save the plot as PNG
-ggsave("funnel_plot.png", funnel_plot, width = 10, height = 8)
+axis(1, cex.axis = 0.8, tck = -0.05)  # Add x-axis (bottom)
+axis(2, cex.axis = 0.8, tck = -0.05)  # Add y-axis (left)
 
-# Display the plot
-print(funnel_plot)
+# Manually draw a box with only the left and bottom lines
+box(lty = "solid", col = "black", bty = "l", lwd = 1.2)  # Add the "l" shaped box
 
-?funnel
+# Add grid lines using abline
+abline(h = seq(0, 0.6, by = 0.1), col = "gray", lty = 2, lwd = 1)  # Horizontal grid lines
+
+# Add minimalist labels with adjusted font size
+mtext("Standardized Mean Difference (SMD)", side = 1, line = 2, cex = 0.9)
+mtext("Standard Error", side = 2, line = 2, cex = 0.9)
+
+
+
+
+
+
 
