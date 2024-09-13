@@ -1,5 +1,4 @@
-#Sensitivity analysis of the DRM
-
+#Sensitivity analysis of the DRMA
 
 install.packages("writexl")
 install.packages("rms")
@@ -10,8 +9,8 @@ install.packages("rmeta")
 install.packages("meta")
 install.packages("metafor")
 
-#import libraries
 
+#import libraries
 
 library(readxl)
 library(writexl)
@@ -37,8 +36,6 @@ View(raw_data)
 
 ####from - ID, N_experimental, N_control,Study_design, Intervention type,
 ###Study_duration (wks), (CKD)_1 or 0, HTA_Status, BP_measure_method,
-
-
 ###Follow up_sodium _IG, Follow up_sodium _CG
 ###Follow up_SBP_IG, Follow up_SBP_IG (SD), 
 ###Follow up_SBP_CG, Follow up_SBP_CG (SD)
@@ -88,10 +85,7 @@ drm.c <- drma %>%
   select(id, n.c, dose.c, y.c, sd.c, design, int.type, duration, bp.measure)
 
 
-
-
 #####join(stack) tables by ID (id, n, dose, y, sd) assign as drm
-
 
 drm <- bind_rows(
   drm.e %>% rename(n = n.e, dose = dose.e, y = y.e, sd = sd.e),
@@ -105,22 +99,18 @@ glimpse(sens)
 
 
 ###save dataframe
-
 write_xlsx(sens, "sens.xlsx")
 
 
 
 
+###Study Design sensitivity analysis
 
-
-###Study Design
-
-
-### Restricted cubic spline model for Non-linear analysis ###
+### Restricted cubic spline model
 knots_sens <- quantile(sens$dose, c(0.15, 0.5, 0.85))
 
 # Fit the restricted cubic spline model
-spl_sens2 <- dosresmeta(
+spl_sens <- dosresmeta(
   formula = y ~ rcs(dose, knots_sens), 
   id = id, sd = sd, n = n, 
   covariance = "md", data = sens, 
@@ -128,25 +118,30 @@ spl_sens2 <- dosresmeta(
 )
 
 # Summary of the spline model
-summary(spl_sens2)
+summary(spl_sens)
 
 # Wald test for non-linearity
-wald_test <- waldtest(vcov(spl_sens2), coef(spl_sens2), 3:4)
+wald_test <- waldtest(vcov(spl_sens), coef(spl_sens), 3:4)
 print(wald_test)
 
 # Generate data for prediction
-newdata <- expand.grid(dose = seq(0, 6, 0.01), design = c("crossover", "parallel"))
-pred_md <- cbind(newdata, predict(spl_sens2, newdata = newdata, xref = 0, expo = FALSE))
+newdata <- expand.grid(dose = seq(0, 6, 0.01), 
+                       design = c("crossover", "parallel"))
+pred_md <- cbind(newdata, predict(spl_sens, newdata = newdata, xref = 0, 
+                                  expo = FALSE))
 
-# Separate data for <4 wks and ≥4 wks durations
-supplement_data <- pred_md[pred_md$design == "parallel", ]
-diet_data <- pred_md[pred_md$design == "crossover", ]
+# Separate data for crossover and parallel
+parallel_data <- pred_md[pred_md$design == "parallel", ]
+crossover_data <- pred_md[pred_md$design == "crossover", ]
 
-# Graphical results using ggplot2 for improved aesthetics
+# Graphical results 
 plot <- ggplot() +
-  geom_line(data = supplement_data, aes(x = dose, y = pred, color = "parallel"), linetype = "solid", size = 0.8) +
-  geom_line(data = diet_data, aes(x = dose, y = pred, color = "crossover"), linetype = "solid", size = 0.8) +
+  geom_line(data = parallel_data, aes(x = dose, y = pred, color = "parallel"), 
+            linetype = "solid", size = 0.8) +
+  geom_line(data = crossover_data, aes(x = dose, y = pred, color = "crossover"),
+            linetype = "solid", size = 0.8) +
   geom_hline(yintercept = 0, linetype = "dotted", color = "black", size = 0.5) +
+  
   labs(
     x = "Δ Sodium excretion (g/day)",
     y = "SBP change (mmHg)",
@@ -166,7 +161,8 @@ plot <- ggplot() +
   )
 
 # Save the plot as PNG
-ggsave("C:/Users/Nomade/OneDrive/Bureau/JAMA/DRM/Sens/design.png", plot, width = 8, height = 6)
+ggsave("C:/Users/Nomade/OneDrive/Bureau/JAMA/DRM/Sens/design.png", 
+       plot, width = 8, height = 6)
 
 # Display the plot
 print(plot)
@@ -174,12 +170,14 @@ print(plot)
 
 
 
-#####Intervention type
-### Restricted cubic spline model for Non-linear analysis ###
+
+#####Intervention type sensitivity analysis
+
+### Restricted cubic spline model 
 knots_sens <- quantile(sens$dose, c(0.15, 0.5, 0.85))
 
 # Fit the restricted cubic spline model
-spl_sens2 <- dosresmeta(
+spl_sens <- dosresmeta(
   formula = y ~ rcs(dose, knots_sens), 
   id = id, sd = sd, n = n, 
   covariance = "md", data = sens, 
@@ -187,24 +185,28 @@ spl_sens2 <- dosresmeta(
 )
 
 # Summary of the spline model
-summary(spl_sens2)
+summary(spl_sens)
 
 # Wald test for non-linearity
-wald_test <- waldtest(vcov(spl_sens2), coef(spl_sens2), 3:4)
+wald_test <- waldtest(vcov(spl_sens), coef(spl_sens), 3:4)
 print(wald_test)
 
 # Generate data for prediction
-newdata <- expand.grid(dose = seq(0, 6, 0.01), int.type = c("diet", "supplement"))
-pred_md <- cbind(newdata, predict(spl_sens2, newdata = newdata, xref = 0, expo = FALSE))
+newdata <- expand.grid(dose = seq(0, 6, 0.01), 
+                       int.type = c("diet", "supplement"))
+pred_md <- cbind(newdata, predict(spl_sens, newdata = newdata, xref = 0, 
+                                  expo = FALSE))
 
-# Separate data for <4 wks and ≥4 wks durations
+# Separate data for supplement and diet
 supplement_data <- pred_md[pred_md$int.type == "supplement", ]
 diet_data <- pred_md[pred_md$int.type == "diet", ]
 
-# Graphical results using ggplot2 for improved aesthetics
+# Graphical results 
 plot <- ggplot() +
-  geom_line(data = supplement_data, aes(x = dose, y = pred, color = "supplement"), linetype = "solid", size = 0.8) +
-  geom_line(data = diet_data, aes(x = dose, y = pred, color = "diet"), linetype = "solid", size = 0.8 ) +
+  geom_line(data = supplement_data, aes(x = dose, y = pred, 
+                    color = "supplement"), linetype = "solid", size = 0.8) +
+  geom_line(data = diet_data, aes(x = dose, y = pred, color = "diet"), 
+            linetype = "solid", size = 0.8 ) +
   geom_hline(yintercept = 0, linetype = "dotted", color = "black", size = 0.5) +
   labs(
     x = "Δ Sodium excretion (g/day)",
@@ -224,7 +226,8 @@ plot <- ggplot() +
   )
 
 # Save the plot as PNG
-ggsave("C:/Users/Nomade/OneDrive/Bureau/JAMA/DRM/Sens/int_type.png", plot, width = 8, height = 6)
+ggsave("C:/Users/Nomade/OneDrive/Bureau/JAMA/DRM/Sens/int_type.png", 
+       plot, width = 8, height = 6)
 
 # Display the plot
 print(plot)
@@ -235,7 +238,7 @@ print(plot)
 
 #Duration
 
-### Restricted cubic spline model for Non-linear analysis ###
+### Restricted cubic spline model 
 knots_sens <- quantile(sens$dose, c(0.15, 0.5, 0.85))
 
 # Fit the restricted cubic spline model
@@ -255,16 +258,19 @@ print(wald_test)
 
 # Generate data for prediction
 newdata <- expand.grid(dose = seq(0, 6, 0.01), duration = c("short", "long"))
-pred_md <- cbind(newdata, predict(spl_sens, newdata = newdata, xref = 0, expo = FALSE))
+pred_md <- cbind(newdata, predict(spl_sens, newdata = newdata, xref = 0, 
+                                  expo = FALSE))
 
 # Separate data for short and long durations
-supplement_data <- pred_md[pred_md$duration == "short", ]
-diet_data <- pred_md[pred_md$duration == "long", ]
+short_data <- pred_md[pred_md$duration == "short", ]
+long_data <- pred_md[pred_md$duration == "long", ]
 
-# Graphical results using ggplot2 for improved aesthetics
+# Graphical results 
 plot <- ggplot() +
-  geom_line(data = supplement_data, aes(x = dose, y = pred, color = "long"), linetype = "solid", size = 0.8) +
-  geom_line(data = diet_data, aes(x = dose, y = pred, color = "short"), linetype = "solid", size = 0.8) +
+  geom_line(data = short_data, aes(x = dose, y = pred, color = "long"), 
+            linetype = "solid", size = 0.8) +
+  geom_line(data = long_data, aes(x = dose, y = pred, color = "short"), 
+            linetype = "solid", size = 0.8) +
   geom_hline(yintercept = 0, linetype = "dotted", color = "black", size = 0.5) +
   labs(
     x = "Δ Sodium excretion (g/day)",
@@ -284,7 +290,8 @@ plot <- ggplot() +
   )
 
 # Save the plot as PNG
-ggsave("C:/Users/Nomade/OneDrive/Bureau/JAMA/DRM/Sens/duration.png", plot, width = 10, height = 8)
+ggsave("C:/Users/Nomade/OneDrive/Bureau/JAMA/DRM/Sens/duration.png", 
+       plot, width = 10, height = 8)
 
 # Display the plot
 print(plot)
@@ -298,7 +305,7 @@ print(plot)
 knots_sens <- quantile(sens$dose, c(0.15, 0.5, 0.85))
 
 # Fit the restricted cubic spline model
-spl_sens2 <- dosresmeta(
+spl_sens <- dosresmeta(
   formula = y ~ rcs(dose, knots_sens), 
   id = id, sd = sd, n = n, 
   covariance = "md", data = sens, 
@@ -306,24 +313,28 @@ spl_sens2 <- dosresmeta(
 )
 
 # Summary of the spline model
-summary(spl_sens2)
+summary(spl_sens)
 
 # Wald test for non-linearity
-wald_test <- waldtest(vcov(spl_sens2), coef(spl_sens2), 3:4)
+wald_test <- waldtest(vcov(spl_sens), coef(spl_sens), 3:4)
 print(wald_test)
 
 # Generate data for prediction
-newdata <- expand.grid(dose = seq(0, 6, 0.01), bp.measure = c("ambulatory", "clinic"))
-pred_md <- cbind(newdata, predict(spl_sens2, newdata = newdata, xref = 0, expo = FALSE))
+newdata <- expand.grid(dose = seq(0, 6, 0.01), 
+                       bp.measure = c("ambulatory", "clinic"))
+pred_md <- cbind(newdata, predict(spl_sens, newdata = newdata, xref = 0, 
+                                    expo = FALSE))
 
-# Separate data for <4 wks and ≥4 wks durations
-supplement_data <- pred_md[pred_md$bp.measure == "clinic", ]
-diet_data <- pred_md[pred_md$bp.measure == "ambulatory", ]
+# Separate data for clinic and ambulatory  
+clinic_data <- pred_md[pred_md$bp.measure == "clinic", ]
+ambulatory_data <- pred_md[pred_md$bp.measure == "ambulatory", ]
 
-# Graphical results using ggplot2 for improved aesthetics
+# Graphical results 
 plot <- ggplot() +
-  geom_line(data = supplement_data, aes(x = dose, y = pred, color = "clinic"), linetype = "solid", size = 0.8) +
-  geom_line(data = diet_data, aes(x = dose, y = pred, color = "ambulatory"), linetype = "solid", size = 0.8) +
+  geom_line(data = clinic_data, aes(x = dose, y = pred, color = "clinic"), 
+            linetype = "solid", size = 0.8) +
+  geom_line(data = ambulatory_data, aes(x = dose, y = pred, color = "ambulatory"), 
+            linetype = "solid", size = 0.8) +
   geom_hline(yintercept = 0, linetype = "dotted", color = "black", size = 0.5) +
   labs(
     x = "Δ Sodium excretion (g/day)",
@@ -343,7 +354,8 @@ plot <- ggplot() +
   )
 
 # Save the plot as PNG
-ggsave("C:/Users/Nomade/OneDrive/Bureau/JAMA/DRM/Sens/bp_measure.png", plot, width = 10, height = 8)
+ggsave("C:/Users/Nomade/OneDrive/Bureau/JAMA/DRM/Sens/bp_measure.png", 
+       plot, width = 10, height = 8)
 
 # Display the plot
 print(plot)

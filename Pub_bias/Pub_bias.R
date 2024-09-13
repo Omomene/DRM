@@ -93,7 +93,7 @@ print(meta_results)
 metabias(meta_results, method.bias = "Egger")
 
 
-#Graphic
+# Graphical results
 
 funnelall <- funnel(meta_results, axes = FALSE, col = "steelblue", 
                     lwd.common = 1.35, lty.common = 1, col.common = "gray",
@@ -140,7 +140,7 @@ metabias(meta_results, method.bias = "Egger")
 
 
 
-#Graphics
+# Graphical results
 
 funnelall <- funnel(meta_results, axes = FALSE, col = "steelblue", 
                     lwd.common = 1.35, lty.common = 1, col.common = "gray",
@@ -185,7 +185,7 @@ print(meta_results)
 #Publication bias test
 metabias(meta_results, method.bias = "Egger")
 
-#Graphics
+# Graphical results
 funnelall <- funnel(meta_results, axes = FALSE, col = "steelblue",
                     lwd.random = NULL, col.random = NULL,
                     lwd.common = 1.35, lty.common = 1, col.common = "gray",
