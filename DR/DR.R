@@ -11,7 +11,6 @@ install.packages("metafor")
 
 #import libraries
 
-
 library(readxl)
 library(writexl)
 library(openxlsx)
@@ -32,8 +31,6 @@ View(raw_data)
 
 ####from - ID, N_experimental, N_control,Study_design, Intervention type,
 ###Study_duration (wks), (CKD)_1 or 0, HTA_Status, BP_measure_method,
-
-
 ###Follow up_sodium _IG, Follow up_sodium _CG
 ###Follow up_SBP_IG, Follow up_SBP_IG (SD), 
 ###Follow up_SBP_CG, Follow up_SBP_CG (SD)
@@ -87,19 +84,16 @@ drm.c <- drma %>%
   select(id, n.c, dose.c, y.c, sd.c, hta, ckd.yn)
 
 
-
-
 #####join(stack) tables by ID (id, n, dose, y, sd) assign as drm
-
 
 drm <- bind_rows(
   drm.e %>% rename(n = n.e, dose = dose.e, y = y.e, sd = sd.e),
   drm.c %>% rename(n = n.c, dose = dose.c, y = y.c, sd = sd.c)
 )
 
-
 ####sort drm by id number ascending
 drm <- drm %>% arrange(id)
+
 glimpse(drm)
 
 
@@ -139,7 +133,6 @@ dosex_drm <- data.frame(dose = seq(0,6))
 predictions <- predict(lin_drm, dosex_drm, order = TRUE)
 predictions
 
-
 # Create data frame for plotting
 plot_data <- data.frame(
   dose = predictions$dose,
@@ -153,7 +146,7 @@ p <- ggplot(plot_data, aes(x = dose)) +
   geom_line(aes(y = pred), color = "steelblue", size = 1) +
   geom_ribbon(aes(ymin = ci.lb, ymax = ci.ub), alpha = 0.1) +
   labs(
-    subtitle = "All populations ",
+    subtitle = "All populations",
     x = "Δ Sodium Excretion (g/day)",
     y = "SBP Change (mmHg)"
   ) +
@@ -197,7 +190,7 @@ p <- ggplot(plot_data, aes(x = dose)) +
   geom_line(aes(y = pred), color = "steelblue", size = 1) +
   geom_ribbon(aes(ymin = ci.lb, ymax = ci.ub), alpha = 0.1) +
   labs(
-    subtitle = "All populations ",
+    subtitle = "All populations",
     x = "Δ Sodium Excretion (g/day)",
     y = "SBP Change (mmHg)"
   ) +
@@ -218,8 +211,8 @@ print(p)
 
 
 ###Restricted cubic spline model 
-
 knots_drm <- quantile(drm$dose, c(.15, .5, .85)) 
+
 # rcspline
 spl_drm <- dosresmeta(formula = y ~ rcs(dose, knots_drm), id = id, sd = sd, 
                       n = n, covariance 
@@ -269,7 +262,6 @@ print(p)
 
 
 
-
 ########### Normotensive
 
 # Linear model
@@ -298,11 +290,11 @@ p <- ggplot(plot_data, aes(x = dose)) +
   geom_line(aes(y = pred), color = "steelblue", size = 1) +
   geom_ribbon(aes(ymin = ci.lb, ymax = ci.ub), alpha = 0.1) +
   labs(
-    subtitle = "All populations ",
+    subtitle = "Normotensive",
     x = "Δ Sodium Excretion (g/day)",
     y = "SBP Change (mmHg)"
   ) +
-  ylim(0, 20) +
+  ylim(0, 10) +
   theme_minimal(base_size = 12) +
   theme(
     plot.title = element_text(hjust = 0.5, face = "bold"),
@@ -315,6 +307,8 @@ ggsave("C:/Users/Nomade/OneDrive/Bureau/JAMA/DRM/normoln.png",
 
 # Display the plot
 print(p)
+
+
 
 
 ###Quadratic
@@ -342,11 +336,11 @@ p <- ggplot(plot_data, aes(x = dose)) +
   geom_line(aes(y = pred), color = "steelblue", size = 1) +
   geom_ribbon(aes(ymin = ci.lb, ymax = ci.ub), alpha = 0.1) +
   labs(
-    subtitle = "All populations ",
+    subtitle = "Normotensive",
     x = "Δ Sodium Excretion (g/day)",
     y = "SBP Change (mmHg)"
   ) +
-  ylim(0, 20) +
+  ylim(0, 10) +
   theme_minimal(base_size = 12) +
   theme(
     plot.title = element_text(hjust = 0.5, face = "bold"),
@@ -393,11 +387,11 @@ p <- ggplot(plot_data, aes(x = dose)) +
   geom_line(aes(y = pred), color = "steelblue", size = 1) +
   geom_ribbon(aes(ymin = ci.lb, ymax = ci.ub), alpha = 0.1) +
   labs(
-    subtitle = "All populations ",
+    subtitle = "Normotensive",
     x = "Δ Sodium Excretion (g/day)",
     y = "SBP Change (mmHg)"
   ) +
-  ylim(0, 20) +
+  ylim(0, 10) +
   theme_minimal(base_size = 12) +
   theme(
     plot.title = element_text(hjust = 0.5, face = "bold"),
@@ -443,7 +437,7 @@ p <- ggplot(plot_data, aes(x = dose)) +
   geom_line(aes(y = pred), color = "steelblue", size = 1) +
   geom_ribbon(aes(ymin = ci.lb, ymax = ci.ub), alpha = 0.1) +
   labs(
-    subtitle = "All populations ",
+    subtitle = "Hypertensive",
     x = "Δ Sodium Excretion (g/day)",
     y = "SBP Change (mmHg)"
   ) +
@@ -487,11 +481,11 @@ p <- ggplot(plot_data, aes(x = dose)) +
   geom_line(aes(y = pred), color = "steelblue", size = 1) +
   geom_ribbon(aes(ymin = ci.lb, ymax = ci.ub), alpha = 0.1) +
   labs(
-    subtitle = "All populations ",
+    subtitle = "Hypertensive",
     x = "Δ Sodium Excretion (g/day)",
     y = "SBP Change (mmHg)"
   ) +
-  ylim(0, 20) +
+  ylim(0, 25) +
   theme_minimal(base_size = 12) +
   theme(
     plot.title = element_text(hjust = 0.5, face = "bold"),
@@ -538,11 +532,11 @@ p <- ggplot(plot_data, aes(x = dose)) +
   geom_line(aes(y = pred), color = "steelblue", size = 1) +
   geom_ribbon(aes(ymin = ci.lb, ymax = ci.ub), alpha = 0.1) +
   labs(
-    subtitle = "All populations ",
+    subtitle = "Hypertensive",
     x = "Δ Sodium Excretion (g/day)",
     y = "SBP Change (mmHg)"
   ) +
-  ylim(0, 20) +
+  ylim(0, 25) +
   theme_minimal(base_size = 12) +
   theme(
     plot.title = element_text(hjust = 0.5, face = "bold"),
@@ -555,50 +549,6 @@ ggsave("C:/Users/Nomade/OneDrive/Bureau/JAMA/DRM/hyperspl.png",
 
 # Display the plot
 print(p)
-
-
-with(predict(spl_hyper, dosex_hyper, xref_hyper),{ 
-  plot(get("rcs(dose, knots_hyper)dose"), pred, type = "l", ylim = c(0, 10), 
-       ylab = "SBP change (mmHg)", xlab = "Δ Sodium excretion (mmol/day)",
-       bty = "l", las = 1, lwd= 1.35, main= "All population", cex.main=1) 
-  matlines(get("rcs(dose, knots_hyper)dose"), cbind(ci.ub, ci.lb),
-           col = 1, lty = "dashed", lwd= 1.35) 
-}) 
-
-
-#linear predictions
-
-newdata <- data.frame(dose = seq(0, 240, 40))
-pred_md <- predict(lin_hyper, newdata = newdata,  expo = FALSE)
-hyperln_pred <- round(pred_md, 2)
-
-# Write the data frame to an Excel file
-write_xlsx(hyperln_pred, 
-           path = "C:/Users/Nomade/OneDrive/Bureau/Practice
-           /documentation/hyperln_pred.xlsx")
-
-#quadratic predictions
-
-newdata <- data.frame(dose = seq(0, 240, 40))
-pred_md <- predict(quadr_hyper, newdata = newdata,  expo = FALSE)
-hyperqdr_pred <- round(pred_md, 2)
-
-# Write the data frame to an Excel file
-write_xlsx(hyperqdr_pred, 
-           path = "C:/Users/Nomade/OneDrive/Bureau/Practice
-           /documentation/hyperqdr_pred.xlsx")
-
-#spline predictions
-
-newdata <- data.frame(dose = seq(0, 240, 40))
-pred_md <- predict(spl_hyper, newdata = newdata,  expo = FALSE)
-hyperspl_pred <- round(pred_md, 2)
-
-# Write the data frame to an Excel file
-write_xlsx(hyperspl_pred, 
-           path = "C:/Users/Nomade/OneDrive/Bureau/Practice
-           /documentation/hyperspl_pred.xlsx")
-
 
 
 
@@ -637,11 +587,11 @@ p <- ggplot(plot_data, aes(x = dose)) +
   geom_line(aes(y = pred), color = "steelblue", size = 1) +
   geom_ribbon(aes(ymin = ci.lb, ymax = ci.ub), alpha = 0.1) +
   labs(
-    subtitle = "All populations ",
+    subtitle = "CKD population",
     x = "Δ Sodium Excretion (g/day)",
     y = "SBP Change (mmHg)"
   ) +
-  ylim(0, 20) +
+  ylim(0, 40) +
   theme_minimal(base_size = 12) +
   theme(
     plot.title = element_text(hjust = 0.5, face = "bold"),
@@ -681,11 +631,11 @@ p <- ggplot(plot_data, aes(x = dose)) +
   geom_line(aes(y = pred), color = "steelblue", size = 1) +
   geom_ribbon(aes(ymin = ci.lb, ymax = ci.ub), alpha = 0.1) +
   labs(
-    subtitle = "All populations ",
+    subtitle = "CKD population",
     x = "Δ Sodium Excretion (g/day)",
     y = "SBP Change (mmHg)"
   ) +
-  ylim(0, 20) +
+  ylim(0, 40) +
   theme_minimal(base_size = 12) +
   theme(
     plot.title = element_text(hjust = 0.5, face = "bold"),
@@ -732,11 +682,11 @@ p <- ggplot(plot_data, aes(x = dose)) +
   geom_line(aes(y = pred), color = "steelblue", size = 1) +
   geom_ribbon(aes(ymin = ci.lb, ymax = ci.ub), alpha = 0.1) +
   labs(
-    subtitle = "All populations ",
+    subtitle = "CKD population",
     x = "Δ Sodium Excretion (g/day)",
     y = "SBP Change (mmHg)"
   ) +
-  ylim(0, 20) +
+  ylim(0, 40) +
   theme_minimal(base_size = 12) +
   theme(
     plot.title = element_text(hjust = 0.5, face = "bold"),
@@ -749,51 +699,5 @@ ggsave("C:/Users/Nomade/OneDrive/Bureau/JAMA/DRM/ckdspl.png",
 
 # Display the plot
 print(p)
-
-
-with(predict(spl_ckd, dosex_ckd, xref_ckd),{ 
-  plot(get("rcs(dose, knots_ckd)dose"), pred, type = "l", ylim = c(0, 10), 
-       ylab = "SBP change (mmHg)", xlab = "Δ Sodium excretion (mmol/day)",
-       bty = "l", las = 1, lwd= 1.35, main= "All population", cex.main=1) 
-  matlines(get("rcs(dose, knots_ckd)dose"), cbind(ci.ub, ci.lb),
-           col = 1, lty = "dashed", lwd= 1.35) 
-}) 
-
-
-#linear predictions
-
-newdata <- data.frame(dose = seq(0, 240, 40))
-pred_md <- predict(lin_ckd, newdata = newdata,  expo = FALSE)
-ckdln_pred <- round(pred_md, 2)
-
-# Write the data frame to an Excel file
-write_xlsx(ckdln_pred, 
-           path = "C:/Users/Nomade/OneDrive/Bureau/Practice
-           /documentation/ckdln_pred.xlsx")
-
-#quadratic predictions
-
-newdata <- data.frame(dose = seq(0, 240, 40))
-pred_md <- predict(quadr_ckd, newdata = newdata,  expo = FALSE)
-ckdqdr_pred <- round(pred_md, 2)
-
-# Write the data frame to an Excel file
-write_xlsx(ckdqdr_pred, 
-           path = "C:/Users/Nomade/OneDrive/Bureau/Practice
-           /documentation/ckdqdr_pred.xlsx")
-
-#spline predictions
-
-newdata <- data.frame(dose = seq(0, 240, 40))
-pred_md <- predict(spl_ckd, newdata = newdata,  expo = FALSE)
-ckdspl_pred <- round(pred_md, 2)
-
-# Write the data frame to an Excel file
-write_xlsx(ckdspl_pred, 
-           path = "C:/Users/Nomade/OneDrive/Bureau/Practice
-           /documentation/ckdspl_pred.xlsx")
-
-
-
 
 
