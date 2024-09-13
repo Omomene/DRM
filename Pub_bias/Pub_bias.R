@@ -20,8 +20,6 @@ View(raw_data)
 
 ####from - ID, N_experimental, N_control,Study_design, Intervention type,
 ###Study_duration (wks), (CKD)_1 or 0, HTA_Status, BP_measure_method,
-
-
 ###Follow up_sodium _IG, Follow up_sodium _CG
 ###Follow up_SBP_IG, Follow up_SBP_IG (SD), 
 ###Follow up_SBP_CG, Follow up_SBP_CG (SD)
@@ -65,6 +63,7 @@ allbias <- drma %>%
 glimpse(allbias)
 
 #filter allbias, normobias(filter hta), hyperbias(filter hta)
+
 normobias <- allbias %>% filter(hta == 0)
 
 glimpse (normobias)
@@ -76,6 +75,7 @@ glimpse (hyperbias)
 
 
 ###Pub bias for all population
+
 # Perform meta-analysis using metacont from meta package
 meta_results <- metacont(n.e = allbias$n.e, 
                          mean.e = allbias$y.e, 
@@ -88,8 +88,12 @@ meta_results <- metacont(n.e = allbias$n.e,
 
 # Print the meta-analysis results
 print(meta_results)
+
+#Publication bias test
 metabias(meta_results, method.bias = "Egger")
 
+
+#Graphic
 
 funnelall <- funnel(meta_results, axes = FALSE, col = "steelblue", 
                     lwd.common = 1.35, lty.common = 1, col.common = "gray",
@@ -98,25 +102,26 @@ funnelall <- funnel(meta_results, axes = FALSE, col = "steelblue",
                     xlim = c(-1.5, 1),
                     ylim = c(0.6, 0))
 
-# Add only left and bottom axes manually
+# Add axes, gridline and labels manually
 
-axis(1, cex.axis = 0.8, tck = -0.05)  # Add x-axis (bottom)
-axis(2, cex.axis = 0.8, tck = -0.05)  # Add y-axis (left)
+axis(1, cex.axis = 0.8, tck = -0.05) 
+axis(2, cex.axis = 0.8, tck = -0.05)  
 
-# Manually draw a box with only the left and bottom lines
-box(lty = "solid", col = "black", bty = "l", lwd = 1.2)  # Add the "l" shaped box
+box(lty = "solid", col = "black", bty = "l", lwd = 1.2)  
 
-# Add grid lines using abline
-abline(h = seq(0, 0.6, by = 0.1), col = "gray", lty = 2, lwd = 1)  # Horizontal grid lines
+abline(h = seq(0, 0.6, by = 0.1), col = "gray", lty = 2, lwd = 1)  
 
-# Add minimalist labels with adjusted font size
 mtext("Standardized Mean Difference (SMD)", side = 1, line = 2, cex = 0.9)
 mtext("Standard Error", side = 2, line = 2, cex = 0.9)
 
 
 
 
+
+
+
 ###Pub bias for normotensive population
+
 # Perform meta-analysis using metacont from meta package
 meta_results <- metacont(n.e = normobias$n.e, 
                          mean.e = normobias$y.e, 
@@ -129,8 +134,13 @@ meta_results <- metacont(n.e = normobias$n.e,
 
 # Print the meta-analysis results
 print(meta_results)
+
+#Publication bias test
 metabias(meta_results, method.bias = "Egger")
 
+
+
+#Graphics
 
 funnelall <- funnel(meta_results, axes = FALSE, col = "steelblue", 
                     lwd.common = 1.35, lty.common = 1, col.common = "gray",
@@ -139,18 +149,15 @@ funnelall <- funnel(meta_results, axes = FALSE, col = "steelblue",
                     xlim = c(-1.5, 1),
                     ylim = c(0.6, 0))
 
-# Add only left and bottom axes manually
+# Add axes, gridlines and label manually
 
-axis(1, cex.axis = 0.8, tck = -0.05)  # Add x-axis (bottom)
-axis(2, cex.axis = 0.8, tck = -0.05)  # Add y-axis (left)
+axis(1, cex.axis = 0.8, tck = -0.05)  
+axis(2, cex.axis = 0.8, tck = -0.05)  
 
-# Manually draw a box with only the left and bottom lines
-box(lty = "solid", col = "black", bty = "l", lwd = 1.2)  # Add the "l" shaped box
+box(lty = "solid", col = "black", bty = "l", lwd = 1.2) 
 
-# Add grid lines using abline
-abline(h = seq(0, 0.6, by = 0.1), col = "gray", lty = 2, lwd = 1)  # Horizontal grid lines
+abline(h = seq(0, 0.6, by = 0.1), col = "gray", lty = 2, lwd = 1)  
 
-# Add minimalist labels with adjusted font size
 mtext("Standardized Mean Difference (SMD)", side = 1, line = 2, cex = 0.9)
 mtext("Standard Error", side = 2, line = 2, cex = 0.9)
 
@@ -159,7 +166,9 @@ mtext("Standard Error", side = 2, line = 2, cex = 0.9)
 
 
 
+
 ###Pub bias for hypertensive population
+
 # Perform meta-analysis using metacont from meta package
 meta_results <- metacont(n.e = hyperbias$n.e, 
                          mean.e = hyperbias$y.e, 
@@ -172,8 +181,11 @@ meta_results <- metacont(n.e = hyperbias$n.e,
 
 # Print the meta-analysis results
 print(meta_results)
+
+#Publication bias test
 metabias(meta_results, method.bias = "Egger")
 
+#Graphics
 funnelall <- funnel(meta_results, axes = FALSE, col = "steelblue",
                     lwd.random = NULL, col.random = NULL,
                     lwd.common = 1.35, lty.common = 1, col.common = "gray",
@@ -182,18 +194,15 @@ funnelall <- funnel(meta_results, axes = FALSE, col = "steelblue",
                     xlim = c(-1.5, 1),
                     ylim = c(0.6, 0))
 
-# Add only left and bottom axes manually
+# Add axes, gridlines and labels manually
 
-axis(1, cex.axis = 0.8, tck = -0.05)  # Add x-axis (bottom)
-axis(2, cex.axis = 0.8, tck = -0.05)  # Add y-axis (left)
+axis(1, cex.axis = 0.8, tck = -0.05)  
+axis(2, cex.axis = 0.8, tck = -0.05)  
 
-# Manually draw a box with only the left and bottom lines
-box(lty = "solid", col = "black", bty = "l", lwd = 1.2)  # Add the "l" shaped box
+box(lty = "solid", col = "black", bty = "l", lwd = 1.2)
 
-# Add grid lines using abline
-abline(h = seq(0, 0.6, by = 0.1), col = "gray", lty = 2, lwd = 1)  # Horizontal grid lines
+abline(h = seq(0, 0.6, by = 0.1), col = "gray", lty = 2, lwd = 1) 
 
-# Add minimalist labels with adjusted font size
 mtext("Standardized Mean Difference (SMD)", side = 1, line = 2, cex = 0.9)
 mtext("Standard Error", side = 2, line = 2, cex = 0.9)
 
