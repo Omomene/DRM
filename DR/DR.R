@@ -230,7 +230,7 @@ summary(spl_drm)
 waldtest(b = coef(spl_drm), Sigma = vcov(spl_drm), Terms = 1:2) 
 
 #Graphical results
-dosex_drm <- data.frame(dose = seq(0,6)) 
+dosex_drm <- data.frame(dose = seq(0,6, 0.1)) 
 xref_drm <- 0 
 predictions <- predict(spl_drm, dosex_drm, xref_drm, order = TRUE)
 predictions
@@ -265,55 +265,6 @@ ggsave("C:/Users/Nomade/OneDrive/Bureau/JAMA/DRM/dose_response_plot.png",
 
 # Display the plot
 print(p)
-
-
-with(predict(spl_drm, dosex_drm, xref_drm),{ 
-  plot(get("rcs(dose, knots_drm)dose"), pred, type = "l", ylim = c(0, 10), 
-       ylab = "SBP change (mmHg)", xlab = "Δ Sodium excretion (mmol/day)",
-       bty = "l", las = 1, lwd= 1.35, main= "All population", cex.main=1) 
-  matlines(get("rcs(dose, knots_drm)dose"), cbind(ci.ub, ci.lb),
-           col = 1, lty = "dashed", lwd= 1.35) 
-}) 
-
-
-#linear predictions
-
-newdata <- data.frame(dose = seq(0, 240, 40))
-pred_md <- predict(lin_drm, newdata = newdata,  expo = FALSE)
-drmln_pred <- round(pred_md, 2)
-
-# Write the data frame to an Excel file
-write_xlsx(drmln_pred, 
-           path = "C:/Users/Nomade/OneDrive/Bureau/Practice
-           /documentation/drmln_pred.xlsx")
-
-#quadratic predictions
-
-newdata <- data.frame(dose = seq(0, 240, 40))
-pred_md <- predict(quadr_drm, newdata = newdata,  expo = FALSE)
-drmqdr_pred <- round(pred_md, 2)
-
-# Write the data frame to an Excel file
-write_xlsx(drmqdr_pred, 
-           path = "C:/Users/Nomade/OneDrive/Bureau/Practice
-           /documentation/drmqdr_pred.xlsx")
-
-#spline predictions
-
-newdata <- data.frame(dose = seq(0, 240, 40))
-pred_md <- predict(spl_drm, newdata = newdata,  expo = FALSE)
-drmspl_pred <- round(pred_md, 2)
-
-# Write the data frame to an Excel file
-write_xlsx(drmspl_pred, 
-           path = "C:/Users/Nomade/OneDrive/Bureau/Practice
-           /documentation/drmspl_pred.xlsx")
-
-
-
-
-
-
 
 
 
@@ -424,7 +375,7 @@ summary(spl_normo)
 waldtest(b = coef(spl_normo), Sigma = vcov(spl_normo), Terms = 1:2) 
 
 #Graphical results
-dosex_normo <- data.frame(dose = seq(0,6)) 
+dosex_normo <- data.frame(dose = seq(0,6, 0.1)) 
 xref_normo <- 0 
 predictions <- predict(spl_normo, dosex_normo, xref_normo, order = TRUE)
 predictions
@@ -459,54 +410,6 @@ ggsave("C:/Users/Nomade/OneDrive/Bureau/JAMA/DRM/normospl.png",
 
 # Display the plot
 print(p)
-
-
-with(predict(spl_normo, dosex_normo, xref_normo),{ 
-  plot(get("rcs(dose, knots_normo)dose"), pred, type = "l", ylim = c(0, 10), 
-       ylab = "SBP change (mmHg)", xlab = "Δ Sodium excretion (mmol/day)",
-       bty = "l", las = 1, lwd= 1.35, main= "All population", cex.main=1) 
-  matlines(get("rcs(dose, knots_normo)dose"), cbind(ci.ub, ci.lb),
-           col = 1, lty = "dashed", lwd= 1.35) 
-}) 
-
-
-#linear predictions
-
-newdata <- data.frame(dose = seq(0, 240, 40))
-pred_md <- predict(lin_normo, newdata = newdata,  expo = FALSE)
-normoln_pred <- round(pred_md, 2)
-
-# Write the data frame to an Excel file
-write_xlsx(normoln_pred, 
-           path = "C:/Users/Nomade/OneDrive/Bureau/Practice
-           /documentation/normoln_pred.xlsx")
-
-#quadratic predictions
-
-newdata <- data.frame(dose = seq(0, 240, 40))
-pred_md <- predict(quadr_normo, newdata = newdata,  expo = FALSE)
-normoqdr_pred <- round(pred_md, 2)
-
-# Write the data frame to an Excel file
-write_xlsx(normoqdr_pred, 
-           path = "C:/Users/Nomade/OneDrive/Bureau/Practice
-           /documentation/normoqdr_pred.xlsx")
-
-#spline predictions
-
-newdata <- data.frame(dose = seq(0, 240, 40))
-pred_md <- predict(spl_normo, newdata = newdata,  expo = FALSE)
-normospl_pred <- round(pred_md, 2)
-
-# Write the data frame to an Excel file
-write_xlsx(normospl_pred, 
-           path = "C:/Users/Nomade/OneDrive/Bureau/Practice
-           /documentation/normospl_pred.xlsx")
-
-
-
-
-
 
 
 
@@ -544,7 +447,7 @@ p <- ggplot(plot_data, aes(x = dose)) +
     x = "Δ Sodium Excretion (g/day)",
     y = "SBP Change (mmHg)"
   ) +
-  ylim(0, 20) +
+  ylim(0, 25) +
   theme_minimal(base_size = 12) +
   theme(
     plot.title = element_text(hjust = 0.5, face = "bold"),
